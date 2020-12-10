@@ -14,7 +14,7 @@ trait ElevatorControlSystem {
   def step(): UIO[Unit]
 }
 
-case class ElevatorState(id: ElevatorId, currFloor: Floor, CurrDirection: Direction, dropOffs: Set[Floor])
+case class ElevatorState(id: ElevatorId, currFloor: Floor, direction: Direction, dropOffs: Set[Floor])
 
 case class EcsState(pickUps: Set[(Floor, Direction)], elevators: Map[ElevatorId, ElevatorState])
 
@@ -43,7 +43,9 @@ object ElevatorControlSystem {
           def status = ecsState.get
 
           def pickUp(floor: Floor, direction: Direction) =
-            ecsState.update(s => s.copy(pickUps = s.pickUps + (floor -> direction)))
+            for {
+              _ <- ecsState.update(s => s.copy(pickUps = s.pickUps + (floor -> direction)))
+            } yield ()
 
           def dropOff(id: ElevatorId, floor: Floor) =
             ecsState.updateSome {
@@ -53,6 +55,14 @@ object ElevatorControlSystem {
             }
 
           def step() = ???
+
+          def shouldStop(floor: Floor, direction: Direction): UIO[Boolean] =
+            for {
+              state <- ecsState.get
+            } yield state.elevators.values.exists { e =>
+              direction == e.direction &&
+                (direction == Up && e.dropOffs.max >= floor || direction == Down && e.dropOffs.min <= floor)
+            }
         }
       }
     } yield res
