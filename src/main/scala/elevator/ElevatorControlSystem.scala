@@ -44,10 +44,15 @@ object ElevatorControlSystem {
 
           def pickUp(floor: Floor, direction: Direction) =
             ecsState.update { s =>
-              if (!shouldStop(s, floor, direction) && existsIdle(s)) {
-                ???
-              }
-              s.copy(pickUps = s.pickUps + (floor -> direction))
+              val withPickUps = s.copy(pickUps = s.pickUps + (floor -> direction))
+
+              if (!shouldStop(s, floor, direction)) {
+                existsIdle(s).map { e =>
+                  e.copy(dropOffs = e.dropOffs + floor, direction = if (e.currFloor < floor) Up else Down)
+                }.fold(withPickUps) { e =>
+                  withPickUps.copy(elevators = withPickUps.elevators + (e.id -> e))
+                }
+              } else withPickUps
             }
 
           def dropOff(id: ElevatorId, floor: Floor) =
@@ -66,7 +71,7 @@ object ElevatorControlSystem {
             }
 
           def existsIdle(state: EcsState) =
-            state.elevators.values.exists(e => e.dropOffs.isEmpty)
+            state.elevators.values.collectFirst { case e if e.dropOffs.isEmpty => e }
         }
       }
     }
