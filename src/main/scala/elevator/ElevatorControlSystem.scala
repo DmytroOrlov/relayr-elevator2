@@ -35,18 +35,22 @@ object ElevatorControlSystem {
   type Start = Int
   type Target = Int
 
-  def apply(initialState: Ref[EcsState]): IO[Capture[ElevatorErr], ElevatorControlSystem] =
+  def apply(ecsState: Ref[EcsState]): IO[Capture[ElevatorErr], ElevatorControlSystem] =
     for {
-      initialState <- initialState.get
-      _ <- IO.fail(ElevatorErr.maxElevatorExceeded(initialState.elevators.length))
-        .when(initialState.elevators.length > 16)
+      initial <- ecsState.get
+      _ <- IO.fail(ElevatorErr.maxElevatorExceeded(initial.elevators.length))
+        .when(initial.elevators.length > 16)
       res <- IO.succeed {
         new ElevatorControlSystem {
-          def status: UIO[EcsState] = ???
+          def status = ecsState.get
 
-          def pickUp(floor: Floor, direction: Direction) = ???
+          def pickUp(floor: Floor, direction: Direction) =
+            ecsState.update(s => s.copy(pickUps = s.pickUps + (floor -> direction)))
 
-          def dropOff(id: ElevatorId, floor: Floor) = ???
+          def dropOff(id: ElevatorId, floor: Floor) =
+            for {
+              _ <- zio.IO.unit
+            } yield ()
 
           def step() = ???
         }
