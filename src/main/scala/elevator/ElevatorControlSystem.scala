@@ -46,10 +46,13 @@ object ElevatorControlSystem {
         private def nextFloor(e: ElevatorState) =
           if (e.direction == Up) e.currFloor + 1 else e.currFloor - 1
 
+        private def reverseFloor(e: ElevatorState) =
+          if (e.direction == Up) e.currFloor - 1 else e.currFloor + 1
+
         def step() = ecsState.update { s =>
           val elevatorsStep = s.elevators.map {
-            case (id, e@ElevatorState(_, _, dir, dropOffs)) if dropOffs.nonEmpty && sameDir(e) =>
-              val newFloor = nextFloor(e)
+            case (id, e@ElevatorState(_, _, dir, dropOffs)) if dropOffs.nonEmpty =>
+              val newFloor = if (sameDir(e)) nextFloor(e) else reverseFloor(e)
               id -> ElevatorState(id, newFloor, dir, dropOffs - newFloor)
             case e => e
           }
