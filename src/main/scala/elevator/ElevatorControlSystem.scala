@@ -57,7 +57,7 @@ object ElevatorControlSystem {
             val updatedPickUps = s.copy(pickUps = s.pickUps + (floor -> direction))
 
             if (!someoneShouldStop(s, floor, direction)) {
-              collectIdleElevator(s, floor).map { e =>
+              collectClosestIdleElevator(s, floor).map { e =>
                 idleStartsMoving(e, floor, direction)
               }.fold(updatedPickUps) { idleElevator =>
                 updatedPickUps.copy(elevators = updatedPickUps.elevators + (idleElevator.id -> idleElevator))
@@ -73,7 +73,7 @@ object ElevatorControlSystem {
               (direction == Up && e.dropOffs.max >= floor || direction == Down && e.dropOffs.min <= floor)
           }
 
-        def collectIdleElevator(state: EcsState, floor: Floor) =
+        def collectClosestIdleElevator(state: EcsState, floor: Floor) =
           state.elevators.values.filter(_.dropOffs.isEmpty).minByOption(_.currFloor - floor)
 
         def idleStartsMoving(e: ElevatorState, floor: Floor, direction: Direction) =
