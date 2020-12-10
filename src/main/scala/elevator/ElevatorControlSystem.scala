@@ -42,8 +42,11 @@ object ElevatorControlSystem {
         def step() = ecsState.update { s =>
           var pickUps = s.pickUps
 
-          EcsState(pickUps, s.elevators.map { case (id, e) =>
-            id -> e
+          EcsState(pickUps, s.elevators.map {
+            case (id, e@ElevatorState(_, curr, dir, dropOffs)) if dropOffs.nonEmpty =>
+
+              ???
+            case e => e
           })
         }
 
