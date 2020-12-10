@@ -4,7 +4,15 @@ import capture.Capture
 import elevator.ElevatorControlSystem._
 import zio._
 
-trait ElevatorControlSystem
+trait ElevatorControlSystem {
+  def status: UIO[EcsState]
+
+  def pickUp(floor: Floor, direction: Direction): UIO[Unit]
+
+  def dropOff(id: ElevatorId, floor: Floor): UIO[Unit]
+
+  def step(): UIO[Unit]
+}
 
 case class ElevatorState(id: ElevatorId, currFloor: Floor, CurrDirection: Direction, dropOffs: Set[Floor])
 
