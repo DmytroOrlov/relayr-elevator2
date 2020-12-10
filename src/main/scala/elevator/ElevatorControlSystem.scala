@@ -43,9 +43,10 @@ object ElevatorControlSystem {
           def status = ecsState.get
 
           def pickUp(floor: Floor, direction: Direction) =
-            for {
-              _ <- ecsState.update(s => s.copy(pickUps = s.pickUps + (floor -> direction)))
-            } yield ()
+            ecsState.update { s =>
+              if (!shouldStop(s, floor, direction)) ???
+              s.copy(pickUps = s.pickUps + (floor -> direction))
+            }
 
           def dropOff(id: ElevatorId, floor: Floor) =
             ecsState.updateSome {
@@ -56,16 +57,15 @@ object ElevatorControlSystem {
 
           def step() = ???
 
-          def shouldStop(floor: Floor, direction: Direction): UIO[Boolean] =
-            for {
-              state <- ecsState.get
-            } yield state.elevators.values.exists { e =>
+          def shouldStop(state: EcsState, floor: Floor, direction: Direction) =
+            state.elevators.values.exists { e =>
               direction == e.direction &&
                 (direction == Up && e.dropOffs.max >= floor || direction == Down && e.dropOffs.min <= floor)
             }
         }
       }
-    } yield res
+    }
+      yield res
 }
 
 case class AppCfg(elevatorMax: Int)
