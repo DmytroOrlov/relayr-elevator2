@@ -35,8 +35,9 @@ object ElevatorControlSystem {
   type Start = Int
   type Target = Int
 
-  def apply(initialState: EcsState): IO[Capture[ElevatorErr], ElevatorControlSystem] =
+  def apply(initialState: Ref[EcsState]): IO[Capture[ElevatorErr], ElevatorControlSystem] =
     for {
+      initialState <- initialState.get
       _ <- IO.fail(ElevatorErr.maxElevatorExceeded(initialState.elevators.length))
         .when(initialState.elevators.length > 16)
     } yield ???

@@ -11,7 +11,8 @@ class ElevatorTest extends DistageBIOEnvSpecScalatest[ZIO] with OptionValues wit
   "ElevatorControlSystem" must {
     "fail for more than 16 elevators" in {
       for {
-        res <- ElevatorControlSystem(EcsState(Set.empty, Seq.fill(17)(ElevatorState(0, 0, Up, Set.empty)))).either
+        initialState <- Ref.make(EcsState(Set.empty, Seq.fill(17)(ElevatorState(0, 0, Up, Set.empty))))
+        res <- ElevatorControlSystem(initialState).either
         _ = assert(res.left.value.continue(asString) === "maxElevatorExceeded 17")
       } yield ()
     }
