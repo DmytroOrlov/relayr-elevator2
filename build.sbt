@@ -51,7 +51,6 @@ val commonSettings = Seq(
 )
 
 lazy val `relayr-elevator` = (project in file("."))
-  .enablePlugins(BuildInfoPlugin)
   .settings(commonSettings)
   .settings(
     libraryDependencies ++= Seq(

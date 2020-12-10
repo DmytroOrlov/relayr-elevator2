@@ -16,7 +16,7 @@ trait ElevatorControlSystem {
 
 case class ElevatorState(id: ElevatorId, currFloor: Floor, CurrDirection: Direction, dropOffs: Set[Floor])
 
-case class EcsState(pickUps: Set[(Floor, Direction)], elevators: Seq[ElevatorState])
+case class EcsState(pickUps: Set[(Floor, Direction)], elevators: Map[ElevatorId, ElevatorState])
 
 object ElevatorControlSystem {
 
@@ -49,7 +49,9 @@ object ElevatorControlSystem {
 
           def dropOff(id: ElevatorId, floor: Floor) =
             for {
-              _ <- zio.IO.unit
+              _ <- ecsState.update { s =>
+                s.elevators
+              }
             } yield ()
 
           def step() = ???
