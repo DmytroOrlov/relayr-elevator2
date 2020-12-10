@@ -40,7 +40,18 @@ object ElevatorControlSystem {
       initialState <- initialState.get
       _ <- IO.fail(ElevatorErr.maxElevatorExceeded(initialState.elevators.length))
         .when(initialState.elevators.length > 16)
-    } yield ???
+      res <- IO.succeed {
+        new ElevatorControlSystem {
+          def status: UIO[EcsState] = ???
+
+          def pickUp(floor: Floor, direction: Direction) = ???
+
+          def dropOff(id: ElevatorId, floor: Floor) = ???
+
+          def step() = ???
+        }
+      }
+    } yield res
 }
 
 case class AppCfg(elevatorMax: Int)
