@@ -1,7 +1,6 @@
 package elevator
 
 import capture.Capture
-import elevator.ElevatorControlSystem._
 import zio._
 
 trait ElevatorControlSystem {
@@ -18,21 +17,17 @@ case class ElevatorState(id: ElevatorId, currFloor: Floor, direction: Direction,
 
 case class EcsState(pickUps: Set[(Floor, Direction)], elevators: Map[ElevatorId, ElevatorState])
 
+sealed trait Elevator
+
+case object Idle extends Elevator
+
+sealed trait Direction extends Elevator
+
+case object Up extends Direction
+
+case object Down extends Direction
+
 object ElevatorControlSystem {
-
-  sealed trait Elevator
-
-  case object Idle extends Elevator
-
-  sealed trait Direction extends Elevator
-
-  case object Up extends Direction
-
-  case object Down extends Direction
-
-  type Floor = Int
-  type ElevatorId = Int
-
   def apply(ecsState: Ref[EcsState]): IO[Capture[ElevatorErr], ElevatorControlSystem] =
     for {
       initial <- ecsState.get
@@ -100,7 +95,7 @@ object ElevatorControlSystem {
 
         private def someoneShouldStop(elevators: Map[ElevatorId, ElevatorState], floor: Floor, direction: Direction) =
           elevators.values.exists { e =>
-            direction == e.direction &&
+            e.dropOffs.nonEmpty && direction == e.direction &&
               (direction == Up && e.dropOffs.max >= floor || direction == Down && e.dropOffs.min <= floor)
           }
 
