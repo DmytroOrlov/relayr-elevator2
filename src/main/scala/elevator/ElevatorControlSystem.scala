@@ -44,7 +44,9 @@ object ElevatorControlSystem {
 
           def pickUp(floor: Floor, direction: Direction) =
             ecsState.update { s =>
-              if (!shouldStop(s, floor, direction)) ???
+              if (!shouldStop(s, floor, direction) && existsIdle(s)) {
+                ???
+              }
               s.copy(pickUps = s.pickUps + (floor -> direction))
             }
 
@@ -62,6 +64,9 @@ object ElevatorControlSystem {
               direction == e.direction &&
                 (direction == Up && e.dropOffs.max >= floor || direction == Down && e.dropOffs.min <= floor)
             }
+
+          def existsIdle(state: EcsState) =
+            state.elevators.values.exists(e => e.dropOffs.isEmpty)
         }
       }
     }
