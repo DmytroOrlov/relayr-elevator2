@@ -40,7 +40,16 @@ object ElevatorControlSystem {
         .when(initial.elevators.size > 16)
       res <- IO.succeed {
         new ElevatorControlSystem {
-          def status = ecsState.get
+          def step() = for {
+            _ <- zio.IO.unit
+          } yield ???
+
+          def dropOff(id: ElevatorId, floor: Floor) =
+            ecsState.updateSome {
+              case s if s.elevators.contains(id) =>
+                val e = s.elevators(id)
+                s.copy(elevators = s.elevators + (e.id -> e.copy(dropOffs = e.dropOffs + floor)))
+            }
 
           def pickUp(floor: Floor, direction: Direction) =
             ecsState.update { s =>
@@ -55,14 +64,7 @@ object ElevatorControlSystem {
               } else withPickUps
             }
 
-          def dropOff(id: ElevatorId, floor: Floor) =
-            ecsState.updateSome {
-              case s if s.elevators.contains(id) =>
-                val e = s.elevators(id)
-                s.copy(elevators = s.elevators + (e.id -> e.copy(dropOffs = e.dropOffs + floor)))
-            }
-
-          def step() = ???
+          def status = ecsState.get
 
           def shouldStop(state: EcsState, floor: Floor, direction: Direction) =
             state.elevators.values.exists { e =>
