@@ -40,9 +40,11 @@ object ElevatorControlSystem {
         .when(initial.elevators.size > 16)
       res = new ElevatorControlSystem {
         def step() = ecsState.update { s =>
+          var pickUps = s.pickUps
 
-
-          s
+          EcsState(pickUps, s.elevators.map { case (id, e) =>
+            id -> e
+          })
         }
 
         def dropOff(id: ElevatorId, floor: Floor) =
