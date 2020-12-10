@@ -39,15 +39,19 @@ object ElevatorControlSystem {
       _ <- IO.fail(ElevatorErr.maxElevatorExceeded(initial.elevators.size))
         .when(initial.elevators.size > 16)
       res = new ElevatorControlSystem {
-        def step() = ecsState.update { s =>
-          var pickUps = s.pickUps
+        private def sameDir(e: ElevatorState) =
+          (e.direction == Up && e.dropOffs.exists())
 
-          EcsState(pickUps, s.elevators.map {
-            case (id, e@ElevatorState(_, curr, dir, dropOffs)) if dropOffs.nonEmpty =>
+
+        def step() = ecsState.update { s =>
+          val es = s.elevators.map {
+            case (id, e@ElevatorState(_, curr, dir, dropOffs)) if dropOffs.nonEmpty && sameDir(e) =>
 
               ???
             case e => e
-          })
+          }
+
+          EcsState(s.pickUps.removedAll(es.values.map(e => e.currFloor -> e.direction)), es)
         }
 
         def dropOff(id: ElevatorId, floor: Floor) =
@@ -72,16 +76,16 @@ object ElevatorControlSystem {
 
         def status = ecsState.get
 
-        def someoneShouldStop(state: EcsState, floor: Floor, direction: Direction) =
+        private def someoneShouldStop(state: EcsState, floor: Floor, direction: Direction) =
           state.elevators.values.exists { e =>
             direction == e.direction &&
               (direction == Up && e.dropOffs.max >= floor || direction == Down && e.dropOffs.min <= floor)
           }
 
-        def collectClosestIdleElevator(state: EcsState, floor: Floor) =
+        private def collectClosestIdleElevator(state: EcsState, floor: Floor) =
           state.elevators.values.filter(_.dropOffs.isEmpty).minByOption(_.currFloor - floor)
 
-        def idleStartsMoving(e: ElevatorState, floor: Floor, direction: Direction) =
+        private def idleStartsMoving(e: ElevatorState, floor: Floor, direction: Direction) =
           e.copy(dropOffs = e.dropOffs + floor, direction = if (e.currFloor < floor) Up else Down)
       }
     } yield res
