@@ -40,7 +40,8 @@ object ElevatorControlSystem {
         .when(initial.elevators.size > 16)
       res = new ElevatorControlSystem {
         private def sameDir(e: ElevatorState) =
-          (e.direction == Up && e.dropOffs.exists())
+          e.direction == Up && e.dropOffs.exists(_ > e.currFloor) ||
+            e.direction == Down && e.dropOffs.exists(_ < e.currFloor)
 
 
         def step() = ecsState.update { s =>
