@@ -32,8 +32,6 @@ object ElevatorControlSystem {
 
   type Floor = Int
   type ElevatorId = Int
-  type Start = Int
-  type Target = Int
 
   def apply(ecsState: Ref[EcsState]): IO[Capture[ElevatorErr], ElevatorControlSystem] =
     for {
@@ -48,13 +46,11 @@ object ElevatorControlSystem {
             ecsState.update(s => s.copy(pickUps = s.pickUps + (floor -> direction)))
 
           def dropOff(id: ElevatorId, floor: Floor) =
-            for {
-              _ <- ecsState.updateSome {
-                case s if s.elevators.contains(id) =>
-                  val e = s.elevators(id)
-                  s.copy(elevators = s.elevators + (e.id -> e.copy(dropOffs = e.dropOffs + floor)))
-              }
-            } yield ()
+            ecsState.updateSome {
+              case s if s.elevators.contains(id) =>
+                val e = s.elevators(id)
+                s.copy(elevators = s.elevators + (e.id -> e.copy(dropOffs = e.dropOffs + floor)))
+            }
 
           def step() = ???
         }
