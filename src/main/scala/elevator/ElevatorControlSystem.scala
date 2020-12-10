@@ -57,9 +57,9 @@ object ElevatorControlSystem {
 
               if (!someoneShouldStop(s, floor, direction)) {
                 existsIdleElevator(s).map { e =>
-                  e.copy(dropOffs = e.dropOffs + floor, direction = if (e.currFloor < floor) Up else Down)
-                }.fold(updatedPickUps) { e =>
-                  updatedPickUps.copy(elevators = updatedPickUps.elevators + (e.id -> e))
+                  idleStartsMoving(e, floor, direction)
+                }.fold(updatedPickUps) { idleElevator =>
+                  updatedPickUps.copy(elevators = updatedPickUps.elevators + (idleElevator.id -> idleElevator))
                 }
               } else updatedPickUps
             }
@@ -74,6 +74,9 @@ object ElevatorControlSystem {
 
           def existsIdleElevator(state: EcsState) =
             state.elevators.values.collectFirst { case e if e.dropOffs.isEmpty => e }
+
+          def idleStartsMoving(e: ElevatorState, floor: Floor, direction: Direction) =
+            e.copy(dropOffs = e.dropOffs + floor, direction = if (e.currFloor < floor) Up else Down)
         }
       }
     }
