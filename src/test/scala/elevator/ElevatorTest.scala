@@ -12,8 +12,11 @@ class ElevatorTest extends DistageBIOEnvSpecScalatest[ZIO] with OptionValues wit
     "fail for more than 16 elevators" in {
       for {
         initialState <- Ref.make {
-          val id = scala.util.Random.nextInt()
-          EcsState(Set.empty, Seq.fill(17)(id -> ElevatorState(id, 0, Up, Set.empty)).toMap)
+          EcsState(
+            pickUps = Set.empty,
+            elevators = 0.until(17).map { id =>
+              id -> ElevatorState(id, 0, Up, Set.empty)
+            }.toMap)
         }
         res <- ElevatorControlSystem(initialState).either
         _ = assert(res.left.value.continue(asString) === "maxElevatorExceeded 17")
