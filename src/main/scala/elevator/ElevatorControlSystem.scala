@@ -47,14 +47,17 @@ object ElevatorControlSystem {
           if (e.direction == Up) e.currFloor + 1 else e.currFloor - 1
 
         def step() = ecsState.update { s =>
-          val es = s.elevators.map {
-            case (id, e@ElevatorState(_, curr, dir, dropOffs)) if dropOffs.nonEmpty && sameDir(e) =>
+          val elevatorsStep = s.elevators.map {
+            case (id, e@ElevatorState(_, _, dir, dropOffs)) if dropOffs.nonEmpty && sameDir(e) =>
               val newFloor = nextFloor(e)
               id -> ElevatorState(id, newFloor, dir, dropOffs - newFloor)
             case e => e
           }
 
-          EcsState(s.pickUps.removedAll(es.values.map(e => e.currFloor -> e.direction)), es)
+          EcsState(
+            pickUps = s.pickUps.removedAll(elevatorsStep.values.map(e => e.currFloor -> e.direction)),
+            elevators = elevatorsStep
+          )
         }
 
         def dropOff(id: ElevatorId, floor: Floor) =
