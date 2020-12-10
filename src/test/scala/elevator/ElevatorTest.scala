@@ -1,5 +1,6 @@
 package elevator
 
+import elevator.ElevatorControlSystem._
 import elevator.ElevatorErr._
 import izumi.distage.testkit.scalatest.DistageBIOEnvSpecScalatest
 import org.scalactic.TypeCheckedTripleEquals
@@ -10,7 +11,7 @@ class ElevatorTest extends DistageBIOEnvSpecScalatest[ZIO] with OptionValues wit
   "ElevatorControlSystem" must {
     "fail for more than 16 elevators" in {
       for {
-        res <- ElevatorControlSystem(Seq.fill(17)((0, 0, 0))).either
+        res <- ElevatorControlSystem(EcsState(Set.empty, Seq.fill(17)(ElevatorState(0, 0, Up, Set.empty)))).either
         _ = assert(res.left.value.continue(asString) === "maxElevatorExceeded 17")
       } yield ()
     }
