@@ -38,8 +38,8 @@ object ElevatorControlSystem {
   def apply(ecsState: Ref[EcsState]): IO[Capture[ElevatorErr], ElevatorControlSystem] =
     for {
       initial <- ecsState.get
-      _ <- IO.fail(ElevatorErr.maxElevatorExceeded(initial.elevators.length))
-        .when(initial.elevators.length > 16)
+      _ <- IO.fail(ElevatorErr.maxElevatorExceeded(initial.elevators.size))
+        .when(initial.elevators.size > 16)
       res <- IO.succeed {
         new ElevatorControlSystem {
           def status = ecsState.get
@@ -49,8 +49,10 @@ object ElevatorControlSystem {
 
           def dropOff(id: ElevatorId, floor: Floor) =
             for {
-              _ <- ecsState.update { s =>
-                s.elevators
+              _ <- ecsState.updateSome {
+                case s if s.elevators.contains(id) =>
+                  val e = s.elevators(id)
+                  s.copy(elevators = s.elevators + (e.id -> e.copy(dropOffs = e.dropOffs + floor)))
               }
             } yield ()
 
