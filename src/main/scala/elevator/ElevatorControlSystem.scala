@@ -36,8 +36,8 @@ object ElevatorControlSystem {
   def apply(ecsState: Ref[EcsState]): IO[Capture[ElevatorErr], ElevatorControlSystem] =
     for {
       initial <- ecsState.get
-      _ <- IO.fail(ElevatorErr.maxElevatorExceeded(initial.elevators.size))
-        .when(initial.elevators.size > 16)
+      _ <- IO.fail(ElevatorErr.wrongElevatorNumber(initial.elevators.size))
+        .when(initial.elevators.size > 16 || initial.elevators.size < 1)
       res = new ElevatorControlSystem {
         private def sameDir(e: ElevatorState) =
           e.direction == Up && e.dropOffs.exists(_ > e.currFloor) ||

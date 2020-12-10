@@ -7,7 +7,7 @@ import org.scalactic.TypeCheckedTripleEquals
 import org.scalatest.{EitherValues, OptionValues}
 import zio._
 
-class ElevatorTest extends DistageBIOEnvSpecScalatest[ZIO] with OptionValues with EitherValues with TypeCheckedTripleEquals {
+class ElevatorsTest extends DistageBIOEnvSpecScalatest[ZIO] with OptionValues with EitherValues with TypeCheckedTripleEquals {
   "ElevatorControlSystem" must {
     "fail for more than 16 elevators" in {
       for {
@@ -19,7 +19,18 @@ class ElevatorTest extends DistageBIOEnvSpecScalatest[ZIO] with OptionValues wit
             }.toMap)
         }
         res <- ElevatorControlSystem(initialState).either
-        _ = assert(res.left.value.continue(asString) === "maxElevatorExceeded 17")
+        _ = assert(res.left.value.continue(asString) === "wrongElevatorNumber: 17 should be 1..16")
+      } yield ()
+    }
+    "fail for 0 elevators" in {
+      for {
+        initialState <- Ref.make {
+          EcsState(
+            pickUps = Set.empty,
+            elevators = Map.empty)
+        }
+        res <- ElevatorControlSystem(initialState).either
+        _ = assert(res.left.value.continue(asString) === "wrongElevatorNumber: 0 should be 1..16")
       } yield ()
     }
   }
