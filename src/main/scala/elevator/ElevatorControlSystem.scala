@@ -57,9 +57,14 @@ object ElevatorControlSystem {
             case e => e
           }
 
+          val newPickUps = s.pickUps.removedAll(elevatorsStep.values.map(e => e.currFloor -> e.direction))
+          lazy val delayedPickUps = newPickUps.filter { case (floor, direction) => !someoneShouldStop(elevatorsStep, floor, direction) }
           EcsState(
-            pickUps = s.pickUps.removedAll(elevatorsStep.values.map(e => e.currFloor -> e.direction)),
-            elevators = elevatorsStep
+            pickUps = newPickUps,
+            elevators =
+              if (elevatorsStep.values.exists(_.dropOffs.isEmpty) && delayedPickUps.nonEmpty) {
+                elevatorsStep
+              } else elevatorsStep,
           )
         }
 
@@ -74,7 +79,7 @@ object ElevatorControlSystem {
           ecsState.update { s =>
             val updatedPickUps = s.copy(pickUps = s.pickUps + (floor -> direction))
 
-            if (!someoneShouldStop(s, floor, direction)) {
+            if (!someoneShouldStop(s.elevators, floor, direction)) {
               collectClosestIdleElevator(s, floor).map { e =>
                 idleStartsMoving(e, floor, direction)
               }.fold(updatedPickUps) { idleElevator =>
@@ -85,8 +90,8 @@ object ElevatorControlSystem {
 
         def status = ecsState.get
 
-        private def someoneShouldStop(state: EcsState, floor: Floor, direction: Direction) =
-          state.elevators.values.exists { e =>
+        private def someoneShouldStop(elevators: Map[ElevatorId, ElevatorState], floor: Floor, direction: Direction) =
+          elevators.values.exists { e =>
             direction == e.direction &&
               (direction == Up && e.dropOffs.max >= floor || direction == Down && e.dropOffs.min <= floor)
           }
