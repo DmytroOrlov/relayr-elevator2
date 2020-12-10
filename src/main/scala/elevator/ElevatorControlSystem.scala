@@ -40,9 +40,10 @@ object ElevatorControlSystem {
         .when(initial.elevators.size > 16)
       res <- IO.succeed {
         new ElevatorControlSystem {
-          def step() = for {
-            _ <- zio.IO.unit
-          } yield ???
+          def step() = ecsState.update { s =>
+
+            s
+          }
 
           def dropOff(id: ElevatorId, floor: Floor) =
             ecsState.updateSome {
@@ -56,7 +57,7 @@ object ElevatorControlSystem {
               val updatedPickUps = s.copy(pickUps = s.pickUps + (floor -> direction))
 
               if (!someoneShouldStop(s, floor, direction)) {
-                existsIdleElevator(s).map { e =>
+                collectIdleElevator(s, floor).map { e =>
                   idleStartsMoving(e, floor, direction)
                 }.fold(updatedPickUps) { idleElevator =>
                   updatedPickUps.copy(elevators = updatedPickUps.elevators + (idleElevator.id -> idleElevator))
@@ -72,8 +73,8 @@ object ElevatorControlSystem {
                 (direction == Up && e.dropOffs.max >= floor || direction == Down && e.dropOffs.min <= floor)
             }
 
-          def existsIdleElevator(state: EcsState) =
-            state.elevators.values.collectFirst { case e if e.dropOffs.isEmpty => e }
+          def collectIdleElevator(state: EcsState, floor: Floor) =
+            state.elevators.values.filter(_.dropOffs.isEmpty).minByOption(_.currFloor - floor)
 
           def idleStartsMoving(e: ElevatorState, floor: Floor, direction: Direction) =
             e.copy(dropOffs = e.dropOffs + floor, direction = if (e.currFloor < floor) Up else Down)
