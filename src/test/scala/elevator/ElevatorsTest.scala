@@ -206,5 +206,54 @@ class ElevatorsTest extends DistageBIOEnvSpecScalatest[ZIO] with OptionValues wi
         }
       } yield ()
     }
+    "continue moving same direction and return" in {
+      for {
+        ecsState <- Ref.make {
+          EcsState(
+            pickUps = Set.empty,
+            elevators = Map(
+              11 -> ElevatorState(11, 1, Up, Set(3)),
+            ),
+          )
+        }
+        ecs <- ElevatorControlSystem(ecsState)
+        _ <- ecs.dropOff(11, 0)
+        s <- ecs.status
+        _ <- IO {
+          assert(s.pickUps.isEmpty)
+          assert(s.elevators.values.count(_.dropOffs.size == 2) === 1)
+        }
+        _ <- ecs.step()
+        s <- ecs.status
+        _ <- IO {
+          assert(s.elevators.values.count(_.dropOffs.size == 2) === 1)
+          assert(s.elevators.values.count(_.currFloor == 2) === 1)
+        }
+        _ <- ecs.step()
+        s <- ecs.status
+        _ <- IO {
+          assert(s.elevators.values.count(_.dropOffs.size == 1) === 1)
+          assert(s.elevators.values.count(_.currFloor == 3) === 1)
+        }
+        _ <- ecs.step()
+        s <- ecs.status
+        _ <- IO {
+          assert(s.elevators.values.count(_.dropOffs.size == 1) === 1)
+          assert(s.elevators.values.count(_.currFloor == 2) === 1)
+        }
+        _ <- ecs.step()
+        s <- ecs.status
+        _ <- IO {
+          assert(s.elevators.values.count(_.dropOffs.size == 1) === 1)
+          assert(s.elevators.values.count(_.currFloor == 1) === 1)
+        }
+        _ <- ecs.step()
+        s <- ecs.status
+        _ <- IO {
+          assert(s.elevators.values.count(_.dropOffs.isEmpty) === 1)
+          assert(s.elevators.values.count(_.currFloor == 0) === 1)
+        }
+      } yield ()
+    }
   }
 }
