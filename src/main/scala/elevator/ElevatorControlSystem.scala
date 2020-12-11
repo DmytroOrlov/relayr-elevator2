@@ -111,5 +111,3 @@ object ElevatorControlSystem {
       }
     } yield res
 }
-
-case class AppCfg(elevatorMax: Int)

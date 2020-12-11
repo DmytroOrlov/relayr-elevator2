@@ -10,14 +10,11 @@ val V = new {
   val distage = "0.10.19"
   val tapir = "0.16.16"
   val sttp = "2.2.9"
-  val elastic4s = "7.9.2"
 
   val scalacheck = "1.15.1"
 
   val betterMonadicFor = "0.3.1"
   val kindProjector = "0.11.2"
-
-  val silencer = "1.7.1"
 }
 
 val Deps = new {
@@ -36,9 +33,6 @@ val Deps = new {
 
   val sttpClientCirce = "com.softwaremill.sttp.client" %% "circe" % V.sttp
   val asyncHttpClientBackendZio = "com.softwaremill.sttp.client" %% "async-http-client-backend-zio" % V.sttp
-
-  val elastic4sClientSttp = "com.sksamuel.elastic4s" %% "elastic4s-client-sttp" % V.elastic4s
-  val elastic4sEffectZio = "com.sksamuel.elastic4s" %% "elastic4s-effect-zio" % V.elastic4s
 
   val scalacheck = "org.scalacheck" %% "scalacheck" % V.scalacheck
 
@@ -71,25 +65,7 @@ lazy val `relayr-elevator` = (project in file("."))
       Deps.tapirOpenapiCirceYaml,
       Deps.tapirOpenapiDocs,
       Deps.tapirSwaggerUiHttp4s,
-
-      Deps.elastic4sClientSttp,
-      Deps.elastic4sEffectZio,
     ),
     addCompilerPlugin(Deps.betterMonadicFor),
     addCompilerPlugin(Deps.kindProjector),
-  )
-  .dependsOn(macros)
-
-lazy val macros = project
-  .disablePlugins(RevolverPlugin)
-  .settings(
-    scalaVersion := "2.13.3",
-    libraryDependencies ++= Seq(
-      compilerPlugin("com.github.ghik" % "silencer-plugin" % V.silencer cross CrossVersion.full),
-      "com.github.ghik" % "silencer-lib" % V.silencer % Provided cross CrossVersion.full,
-      "org.scala-lang" % "scala-reflect" % scalaVersion.value % "provided",
-      "dev.zio" %% "zio-test-sbt" % V.zio % Test,
-    ),
-    testFrameworks += new TestFramework("zio.test.sbt.ZTestFramework"),
-    scalacOptions += "-language:experimental.macros",
   )
